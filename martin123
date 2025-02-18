@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="mk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дневник за закажување на автомобили</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #00aaff, #003366); /* Разиграни сини нијанси */
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .journal, .record {
+            width: 48%;
+            background-color: #003366;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #fff;
+        }
+        input[type="text"], input[type="number"], textarea, input[type="datetime-local"] {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: none;
+        }
+        .checkbox-container {
+            margin: 10px 0;
+        }
+        .checkbox-container input {
+            margin-right: 10px;
+        }
+        .button {
+            background-color: #fff;
+            color: #003366;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .button:hover {
+            background-color: #1e60a1;
+        }
+        .delete-button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: center;
+        }
+        .delete-button:hover {
+            background-color: #ff1a1a;
+        }
+        .edit-button {
+            background-color: #ffff00;
+            color: black;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: center;
+        }
+        .edit-button:hover {
+            background-color: #f7d700;
+        }
+        .record-item {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #4a7c9e;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .record-item p {
+            margin: 0;
+            font-size: 12px; /* Помало и уредно */
+            line-height: 1.4;
+        }
+        .history-entry {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Лева страна: Евиденција за испрани автомобили -->
+        <div class="record">
+            <h2>Евиденција за испрани автомобили</h2>
+            <form id="recordForm">
+                <label for="carSelection">Избор на автомобил:</label>
+                <input type="text" id="carSelection" name="carSelection" placeholder="Внесете автомобил" required>
+                <div class="checkbox-container">
+                    <label><input type="checkbox" name="cleaningService" value="Внатрешно чистење"> Внатрешно чистење - 200 ден</label><br>
+                    <label><input type="checkbox" name="cleaningService" value="Надворешно чистење"> Надворешно чистење - 250 ден</label><br>
+                    <label><input type="checkbox" name="cleaningService" value="Целосно возило"> Целосно возило - 400 ден</label>
+                </div>
+                <button type="submit" class="button">Додади</button>
+            </form>
+            <div id="recordList"></div>
+        </div>
+
+        <!-- Десна страна: Дневник за закажување на автомобили -->
+        <div class="journal">
+            <h2>Дневник за закажување на автомобили</h2>
+            <form id="journalForm">
+                <label for="date">Датум и време:</label>
+                <input type="datetime-local" id="date" name="date" required>
+                <label for="notes">Напомена:</label>
+                <textarea id="notes" name="notes" rows="4" placeholder="Напишете напомена..."></textarea>
+                <button type="submit" class="button">Додади го во записи</button>
+            </form>
+            <div id="journalEntries"></div>
+        </div>
+    </div>
+
+    <script>
+        // Дневник
+        const journalForm = document.getElementById('journalForm');
+        const journalEntries = document.getElementById('journalEntries');
+
+        // Автоматско пополнување на датум и време со тековен
+        const dateInput = document.getElementById('date');
+        const currentDateTime = new Date().toISOString().slice(0, 16);
+        dateInput.value = currentDateTime;
+
+        journalForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const date = document.getElementById('date').value;
+            const notes = document.getElementById('notes').value;
+
+            const entry = document.createElement('div');
+            entry.classList.add('entry');
+            entry.innerHTML = `<p><strong>Датум и време:</strong> ${date}</p><p><strong>Напомена:</strong> ${notes}</p><button class="delete-button">🗑️</button><button class="edit-button">✏️</button>`;
+            journalEntries.appendChild(entry);
+
+            // Избриши
+            entry.querySelector('.delete-button').addEventListener('click', function () {
+                entry.remove();
+            });
+
+            // Измени
+            entry.querySelector('.edit-button').addEventListener('click', function () {
+                dateInput.value = date;
+                document.getElementById('notes').value = notes;
+                entry.remove();
+            });
+
+            journalForm.reset();
+        });
+
+        // Евиденција за испрани автомобили
+        const recordForm = document.getElementById('recordForm');
+        const recordList = document.getElementById('recordList');
+
+        recordForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const carSelection = document.getElementById('carSelection').value;
+            const services = [...document.querySelectorAll('input[name="cleaningService"]:checked')]
+                .map(checkbox => checkbox.value)
+                .join(', ');
+
+            const date = new Date().toLocaleString();
+
+            const record = document.createElement('div');
+            record.classList.add('record-item');
+            record.innerHTML = `
+                <p><strong>Автомобил:</strong> ${carSelection}</p>
+                <p><strong>Услуга:</strong> ${services}</p>
+                <p><strong>Време:</strong> ${date}</p>
+                <button class="delete-button">🗑️</button>
+            `;
+            recordList.appendChild(record);
+
+            record.querySelector('.delete-button').addEventListener('click', function () {
+                record.remove();
+            });
+
+            recordForm.reset();
+        });
+
+        // Променливи бои на записи
+        function changeRecordColors() {
+            const records = document.querySelectorAll('.record-item');
+            const currentDate = new Date().getDate();
+            records.forEach(record => {
+                let createdDate = new Date(record.querySelector('p strong').textContent.split(': ')[1]);
+                let recordDate = createdDate.getDate();
+                if (currentDate === recordDate) {
+                    record.style.backgroundColor = '#4CAF50'; // Зелена за денес
+                } else if (currentDate - recordDate === 1) {
+                    record.style.backgroundColor = '#FFA500'; // Оранжево за вчера
+                } else {
+                    record.style.backgroundColor = '#FFD700'; // Жолта за стари записи
+                }
+            });
+        }
+
+        setInterval(changeRecordColors, 1000 * 60 * 60 * 24); // Ажурирај ги боите секој ден
+
+    </script>
+
+</body>
+</html>
